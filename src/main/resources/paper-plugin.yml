@@ -1,0 +1,11 @@
+name: FrontleavesLib
+description: Frontleaves 通用库 - 为插件提供 gRPC 基础设施
+prefix: FLLib
+version: '${version}'
+
+main: com.frontleaves.plugins.lib.FrontleavesLib
+api-version: '1.21.1'
+load: STARTUP
+
+authors: [ xiao_lfeng ]
+website: https://www.frontleaves.com
