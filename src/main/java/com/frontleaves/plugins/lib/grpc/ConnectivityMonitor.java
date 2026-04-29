@@ -1,5 +1,6 @@
 package com.frontleaves.plugins.lib.grpc;
 
+import com.frontleaves.plugins.lib.message.Message;
 import io.grpc.ConnectivityState;
 import io.grpc.ManagedChannel;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -62,7 +63,7 @@ public class ConnectivityMonitor {
             switch (newState) {
                 case READY -> {
                     if (!channelReady.getAndSet(true)) {
-                        plugin.getLogger().info("[" + tag + "] gRPC 连接已恢复 (READY)");
+                        Message.of(plugin).console().info("[" + tag + "] gRPC 连接已恢复 (READY)");
                         if (onReadyCallback != null) {
                             onReadyCallback.run();
                         }
@@ -70,7 +71,7 @@ public class ConnectivityMonitor {
                 }
                 case TRANSIENT_FAILURE -> {
                     if (channelReady.getAndSet(false)) {
-                        plugin.getLogger().warning("[" + tag + "] gRPC 连接异常 (TRANSIENT_FAILURE)，暂停心跳");
+                        Message.of(plugin).console().warning("[" + tag + "] gRPC 连接异常 (TRANSIENT_FAILURE)，暂停心跳");
                         if (onFailureCallback != null) {
                             onFailureCallback.run();
                         }

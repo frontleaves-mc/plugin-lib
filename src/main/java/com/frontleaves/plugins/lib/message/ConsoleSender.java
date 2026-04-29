@@ -6,6 +6,7 @@ import net.kyori.adventure.text.minimessage.ParsingException;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
+
 import java.util.logging.Level;
 
 /**
@@ -14,11 +15,18 @@ import java.util.logging.Level;
  * 纯文本消息会自动拼接 PREFIX 并尝试进行 MiniMessage 反序列化；
  * 若反序列化失败则降级为纯文本发送并输出警告日志。
  * 富文本消息直接发送，不拼接 PREFIX。
+ * <p>
+ * 提供 {@link #info(String)}、{@link #warning(String)}、{@link #severe(String)} 日志级别方法，
+ * 在控制台输出带颜色级别标识的富文本消息，同时写入 Bukkit 日志文件。
  *
  * @author xiao_lfeng
  * @version 1.0.0
  */
 public final class ConsoleSender implements MessageSender {
+
+    private static final String LEVEL_INFO = "<dark_gray>[</dark_gray><green>INFO</green><dark_gray>]</dark_gray> ";
+    private static final String LEVEL_WARN = "<dark_gray>[</dark_gray><gold>WARN</gold><dark_gray>]</dark_gray> ";
+    private static final String LEVEL_ERROR = "<dark_gray>[</dark_gray><red>ERROR</red><dark_gray>]</dark_gray> ";
 
     private final JavaPlugin plugin;
     private final String prefix;
@@ -34,6 +42,45 @@ public final class ConsoleSender implements MessageSender {
         this.plugin = plugin;
         this.prefix = prefix;
         this.miniMessage = MiniMessage.miniMessage();
+    }
+
+    /**
+     * 向控制台发送 INFO 级别消息。
+     * <p>
+     * 输出格式：{@code [INFO] [锋楜XXX] 消息内容}，INFO 为绿色。
+     * 同时写入 Bukkit 日志文件（{@code Level.INFO}）。
+     *
+     * @param message 要发送的消息内容
+     */
+    public void info(@NotNull String message) {
+        sendLevelMessage(LEVEL_INFO, message);
+        plugin.getLogger().info(message);
+    }
+
+    /**
+     * 向控制台发送 WARNING 级别消息。
+     * <p>
+     * 输出格式：{@code [WARN] [锋楜XXX] 消息内容}，WARN 为金色。
+     * 同时写入 Bukkit 日志文件（{@code Level.WARNING}）。
+     *
+     * @param message 要发送的消息内容
+     */
+    public void warning(@NotNull String message) {
+        sendLevelMessage(LEVEL_WARN, message);
+        plugin.getLogger().warning(message);
+    }
+
+    /**
+     * 向控制台发送 SEVERE 级别消息。
+     * <p>
+     * 输出格式：{@code [ERROR] [锋楜XXX] 消息内容}，ERROR 为红色。
+     * 同时写入 Bukkit 日志文件（{@code Level.SEVERE}）。
+     *
+     * @param message 要发送的消息内容
+     */
+    public void severe(@NotNull String message) {
+        sendLevelMessage(LEVEL_ERROR, message);
+        plugin.getLogger().severe(message);
     }
 
     /**
@@ -64,5 +111,19 @@ public final class ConsoleSender implements MessageSender {
     @Override
     public void sendComponent(@NotNull Component component) {
         Bukkit.getConsoleSender().sendMessage(component);
+    }
+
+    /**
+     * 拼接级别标识 + 前缀 + 消息内容，反序列化后发送到控制台。
+     * <p>
+     * 若 MiniMessage 反序列化失败则降级为纯文本。
+     */
+    private void sendLevelMessage(@NotNull String levelTag, @NotNull String message) {
+        String compiled = levelTag + prefix + message;
+        try {
+            Bukkit.getConsoleSender().sendMessage(miniMessage.deserialize(compiled));
+        } catch (ParsingException e) {
+            Bukkit.getConsoleSender().sendMessage(compiled);
+        }
     }
 }

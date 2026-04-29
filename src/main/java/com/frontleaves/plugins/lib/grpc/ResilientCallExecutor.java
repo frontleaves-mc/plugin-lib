@@ -1,6 +1,7 @@
 package com.frontleaves.plugins.lib.grpc;
 
 import com.frontleaves.plugins.lib.config.GrpcConfig;
+import com.frontleaves.plugins.lib.message.Message;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -10,7 +11,6 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
-import java.util.logging.Level;
 
 /**
  * 带退避策略的 gRPC 调用执行器。
@@ -103,7 +103,7 @@ public class ResilientCallExecutor {
     private void onCallSucceeded() {
         int prev = consecutiveFailures.getAndSet(0);
         if (prev > 0) {
-            plugin.getLogger().info("[" + tag + "] gRPC 调用恢复正常（此前连续失败 " + prev + " 次）");
+            Message.of(plugin).console().info("[" + tag + "] gRPC 调用恢复正常（此前连续失败 " + prev + " 次）");
         }
         currentBackoffSecs = config.retryInitialIntervalSecs();
     }
@@ -116,11 +116,11 @@ public class ResilientCallExecutor {
                 + Optional.ofNullable(e.getMessage()).orElse(e.getClass().getSimpleName());
 
         if (permanent) {
-            plugin.getLogger().warning("[" + tag + "] " + message + " (不可恢复: " + e.getStatus().getCode() + ")");
+            Message.of(plugin).console().warning("[" + tag + "] " + message + " (不可恢复: " + e.getStatus().getCode() + ")");
         } else if (failures > config.retrySuppressAfter()) {
-            plugin.getLogger().log(Level.INFO, "[" + tag + "] " + message + " (第 " + failures + " 次连续失败，退避 " + currentBackoffSecs + "s)");
+            Message.of(plugin).console().info("[" + tag + "] " + message + " (第 " + failures + " 次连续失败，退避 " + currentBackoffSecs + "s)");
         } else {
-            plugin.getLogger().warning("[" + tag + "] " + message);
+            Message.of(plugin).console().warning("[" + tag + "] " + message);
         }
     }
 
