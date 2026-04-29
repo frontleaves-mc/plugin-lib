@@ -1,0 +1,41 @@
+# FrontleavesLib gRPC 客户端基础设施配置
+# 修改后使用 /fllib reload 即可热加载，无需重启服务器
+
+grpc:
+  # HTTP/2 Keepalive 配置
+  # 定期发送 PING 帧防止连接被中间件（防火墙/NAT/反向代理）静默关闭
+  keepalive:
+    # PING 帧发送间隔（秒）
+    # 建议值：小于防火墙/NAT 的空闲超时（通常 60-120 秒）
+    time-seconds: 30
+    # PING 帧响应超时（秒）
+    # 超过此时间未收到 PING_ACK 则认为连接已失效
+    timeout-seconds: 10
+    # 是否在无活跃 RPC 时也发送 PING
+    # true：始终保持连接活跃；false：仅在有调用时保活
+    without-calls: true
+    # 通道空闲超时（秒）
+    # 超过此时间无任何 RPC 调用且无 keepalive PING 则关闭通道
+    # 设为 0 表示永不超时
+    idle-timeout-seconds: 300
+
+  # RPC 调用超时
+  call:
+    # 单次 RPC 调用的默认超时（秒）
+    # 超过此时间未收到响应则取消调用
+    deadline-seconds: 10
+
+  # 重试与退避策略
+  retry:
+    # 是否启用失败重试
+    enabled: true
+    # 最大连续重试次数（仅对可恢复错误重试）
+    max-attempts: 3
+    # 初始退避间隔（秒），连续失败后按指数增长
+    initial-interval-seconds: 5
+    # 最大退避间隔（秒），指数增长上限
+    max-interval-seconds: 60
+    # 退避乘数（每次失败后间隔乘以此值）
+    multiplier: 2.0
+    # 连续失败多少次后降低日志级别（从 WARNING 降为 INFO）
+    suppress-after-failures: 5
