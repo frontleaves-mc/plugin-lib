@@ -5,6 +5,7 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.ParsingException;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.logging.Level;
@@ -23,11 +24,6 @@ import java.util.logging.Level;
  * @version 1.0.0
  */
 public final class ConsoleSender implements MessageSender {
-
-    private static final String LEVEL_INFO = "<dark_gray>[</dark_gray><green>INFO</green><dark_gray>]</dark_gray> ";
-    private static final String LEVEL_WARN = "<dark_gray>[</dark_gray><gold>WARN</gold><dark_gray>]</dark_gray> ";
-    private static final String LEVEL_ERROR = "<dark_gray>[</dark_gray><red>ERROR</red><dark_gray>]</dark_gray> ";
-
     private final JavaPlugin plugin;
     private final String prefix;
     private final MiniMessage miniMessage;
@@ -38,6 +34,7 @@ public final class ConsoleSender implements MessageSender {
      * @param plugin 所属插件实例
      * @param prefix  消息前缀（MiniMessage 格式）
      */
+    @Contract(pure = true)
     ConsoleSender(@NotNull JavaPlugin plugin, @NotNull String prefix) {
         this.plugin = plugin;
         this.prefix = prefix;
@@ -53,7 +50,6 @@ public final class ConsoleSender implements MessageSender {
      * @param message 要发送的消息内容
      */
     public void info(@NotNull String message) {
-        sendLevelMessage(LEVEL_INFO, message);
         plugin.getLogger().info(message);
     }
 
@@ -66,7 +62,6 @@ public final class ConsoleSender implements MessageSender {
      * @param message 要发送的消息内容
      */
     public void warning(@NotNull String message) {
-        sendLevelMessage(LEVEL_WARN, message);
         plugin.getLogger().warning(message);
     }
 
@@ -79,7 +74,6 @@ public final class ConsoleSender implements MessageSender {
      * @param message 要发送的消息内容
      */
     public void severe(@NotNull String message) {
-        sendLevelMessage(LEVEL_ERROR, message);
         plugin.getLogger().severe(message);
     }
 
@@ -111,19 +105,5 @@ public final class ConsoleSender implements MessageSender {
     @Override
     public void sendComponent(@NotNull Component component) {
         Bukkit.getConsoleSender().sendMessage(component);
-    }
-
-    /**
-     * 拼接级别标识 + 前缀 + 消息内容，反序列化后发送到控制台。
-     * <p>
-     * 若 MiniMessage 反序列化失败则降级为纯文本。
-     */
-    private void sendLevelMessage(@NotNull String levelTag, @NotNull String message) {
-        String compiled = levelTag + prefix + message;
-        try {
-            Bukkit.getConsoleSender().sendMessage(miniMessage.deserialize(compiled));
-        } catch (ParsingException e) {
-            Bukkit.getConsoleSender().sendMessage(compiled);
-        }
     }
 }

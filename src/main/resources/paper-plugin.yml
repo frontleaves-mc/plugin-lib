@@ -1,6 +1,6 @@
-name: FrontleavesLib
+name: frontleaves-lib
 description: Frontleaves 通用库 - 为插件提供 gRPC 基础设施
-prefix: FLLib
+prefix: FLLIB
 version: '${version}'
 
 main: com.frontleaves.plugins.lib.FrontleavesLib

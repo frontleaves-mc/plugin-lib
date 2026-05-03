@@ -37,7 +37,7 @@ public final class FrontleavesLib extends JavaPlugin {
         saveDefaultConfig();
         grpcConfig = GrpcConfig.fromConfig(getConfig());
         instance = this;
-        Message.of(this).console().info("Frontleaves 通用库已加载，gRPC 客户端基础设施就绪");
+        Message.of(this, "前置").console().info("Frontleaves 通用库已加载，gRPC 客户端基础设施就绪");
     }
 
     @Override
@@ -50,12 +50,12 @@ public final class FrontleavesLib extends JavaPlugin {
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
-                Message.of(this).console().warning("发现未关闭的 gRPC 通道，已自动清理");
+                Message.of(this, "前置").console().warning("发现未关闭的 gRPC 通道，已自动清理");
             }
         }
         activeChannels.clear();
         instance = null;
-        Message.of(this).console().info("Frontleaves 通用库已卸载");
+        Message.of(this, "前置").console().info("Frontleaves 通用库已卸载");
     }
 
     public @NotNull GrpcConfig getGrpcConfig() {
@@ -69,7 +69,7 @@ public final class FrontleavesLib extends JavaPlugin {
     public void reloadGrpcConfig() {
         reloadConfig();
         grpcConfig = GrpcConfig.fromConfig(getConfig());
-        Message.of(this).console().info("gRPC 配置已重新加载");
+        Message.of(this, "前置").console().info("gRPC 配置已重新加载");
     }
 
     /**
