@@ -7,7 +7,10 @@ import com.frontleaves.plugins.lib.grpc.ResilientCallExecutor;
 import com.frontleaves.plugins.lib.message.Message;
 import com.frontleaves.plugins.lib.message.MessageBuilder;
 import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
+import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
+import io.grpc.netty.shaded.io.netty.channel.EventLoopGroup;
+import io.grpc.netty.shaded.io.netty.channel.nio.NioEventLoopGroup;
+import io.grpc.netty.shaded.io.netty.util.concurrent.Future;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
@@ -26,6 +29,7 @@ public final class FrontleavesLib extends JavaPlugin {
 
     private static FrontleavesLib instance;
     private final List<ManagedChannel> activeChannels = new ArrayList<>();
+    private final EventLoopGroup sharedEventLoopGroup = new NioEventLoopGroup();
     private GrpcConfig grpcConfig;
 
     public static Optional<FrontleavesLib> getInstance() {
@@ -44,12 +48,9 @@ public final class FrontleavesLib extends JavaPlugin {
     public void onDisable() {
         for (ManagedChannel channel : activeChannels) {
             if (!channel.isShutdown()) {
-                // 优雅关闭：让 Netty EventLoop 线程自行完成清理，
-                // 避免 shutdownNow() 中断线程后线程仍需加载类但 ClassLoader 已销毁
                 channel.shutdown();
                 try {
                     if (!channel.awaitTermination(3, TimeUnit.SECONDS)) {
-                        // 优雅关闭超时，强制终止残留线程
                         channel.shutdownNow();
                         channel.awaitTermination(2, TimeUnit.SECONDS);
                     }
@@ -57,10 +58,19 @@ public final class FrontleavesLib extends JavaPlugin {
                     channel.shutdownNow();
                     Thread.currentThread().interrupt();
                 }
-                Message.of(this, "前置").console().warning("发现未关闭的 gRPC 通道，已自动清理");
             }
         }
         activeChannels.clear();
+
+        // 关闭共享 EventLoopGroup 并阻塞等待所有 Netty 线程终止，
+        // 防止线程在 ClassLoader 销毁后仍尝试加载匿名内部类
+        Future<?> shutdownFuture = sharedEventLoopGroup.shutdownGracefully(0, 5, TimeUnit.SECONDS);
+        try {
+            shutdownFuture.await(5, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
         instance = null;
         Message.of(this, "前置").console().info("Frontleaves 通用库已卸载");
     }
@@ -96,7 +106,8 @@ public final class FrontleavesLib extends JavaPlugin {
             @NotNull String pluginName,
             @NotNull String secretKey
     ) {
-        ManagedChannelBuilder<?> builder = ManagedChannelBuilder.forAddress(host, port)
+        NettyChannelBuilder builder = NettyChannelBuilder.forAddress(host, port)
+                .eventLoopGroup(sharedEventLoopGroup)
                 .intercept(new ClientAuthInterceptor(pluginName, secretKey))
                 .usePlaintext()
                 .keepAliveTime(grpcConfig.keepAliveTimeSeconds(), TimeUnit.SECONDS)
