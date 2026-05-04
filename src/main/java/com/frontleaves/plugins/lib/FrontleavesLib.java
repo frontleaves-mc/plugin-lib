@@ -44,10 +44,17 @@ public final class FrontleavesLib extends JavaPlugin {
     public void onDisable() {
         for (ManagedChannel channel : activeChannels) {
             if (!channel.isShutdown()) {
-                channel.shutdownNow();
+                // 优雅关闭：让 Netty EventLoop 线程自行完成清理，
+                // 避免 shutdownNow() 中断线程后线程仍需加载类但 ClassLoader 已销毁
+                channel.shutdown();
                 try {
-                    channel.awaitTermination(5, TimeUnit.SECONDS);
+                    if (!channel.awaitTermination(3, TimeUnit.SECONDS)) {
+                        // 优雅关闭超时，强制终止残留线程
+                        channel.shutdownNow();
+                        channel.awaitTermination(2, TimeUnit.SECONDS);
+                    }
                 } catch (InterruptedException e) {
+                    channel.shutdownNow();
                     Thread.currentThread().interrupt();
                 }
                 Message.of(this, "前置").console().warning("发现未关闭的 gRPC 通道，已自动清理");

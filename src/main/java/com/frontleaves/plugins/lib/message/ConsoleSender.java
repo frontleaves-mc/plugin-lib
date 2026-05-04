@@ -44,7 +44,7 @@ public final class ConsoleSender implements MessageSender {
     /**
      * 向控制台发送 INFO 级别消息。
      * <p>
-     * 输出格式：{@code [INFO] [锋楜XXX] 消息内容}，INFO 为绿色。
+     * 输出格式：{@code [INFO] [锋楪XXX] 消息内容}，INFO 为绿色。
      * 同时写入 Bukkit 日志文件（{@code Level.INFO}）。
      *
      * @param message 要发送的消息内容
@@ -56,7 +56,7 @@ public final class ConsoleSender implements MessageSender {
     /**
      * 向控制台发送 WARNING 级别消息。
      * <p>
-     * 输出格式：{@code [WARN] [锋楜XXX] 消息内容}，WARN 为金色。
+     * 输出格式：{@code [WARN] [锋楪XXX] 消息内容}，WARN 为金色。
      * 同时写入 Bukkit 日志文件（{@code Level.WARNING}）。
      *
      * @param message 要发送的消息内容
@@ -68,7 +68,7 @@ public final class ConsoleSender implements MessageSender {
     /**
      * 向控制台发送 SEVERE 级别消息。
      * <p>
-     * 输出格式：{@code [ERROR] [锋楜XXX] 消息内容}，ERROR 为红色。
+     * 输出格式：{@code [ERROR] [锋楪XXX] 消息内容}，ERROR 为红色。
      * 同时写入 Bukkit 日志文件（{@code Level.SEVERE}）。
      *
      * @param message 要发送的消息内容
